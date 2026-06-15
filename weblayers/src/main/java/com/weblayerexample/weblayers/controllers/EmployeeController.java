@@ -1,32 +1,40 @@
 package com.weblayerexample.weblayers.controllers;
 
 import com.weblayerexample.weblayers.dto.EmployeeDto;
+import com.weblayerexample.weblayers.entities.EmployeeEntity;
+import com.weblayerexample.weblayers.repositories.EmployeeRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequestMapping("/employees")
+@RequiredArgsConstructor
 class EmployeeController
 {
+    private final EmployeeRepository employeeRepository;
+
     @GetMapping("/{employeeId}")
-    public EmployeeDto getEmployeeById(@PathVariable(name = "employeeId") Long id)
+    public EmployeeEntity getEmployeeById(@PathVariable(name = "employeeId") Long id)
     {
-        return new EmployeeDto("Sujit" , id , "Sujit@gmail.com", 23 , LocalDate.of(2024 , 1 , 2 ), true);
+         return  employeeRepository.findById(id).orElse(null);
     }
 
     @GetMapping
-    public String getAllEmployees(@RequestParam(required = false, name = "InputAge") Integer age,
-                                  @RequestParam(required = false) String sortBy)
+    public List<EmployeeEntity> getAllEmployees(@RequestParam(required = false, name = "InputAge") Integer age,
+                                                @RequestParam(required = false) String sortBy)
     {
-        return "hii , Age is " + age + " "+ sortBy ;
+        return employeeRepository.findAll();        // parameters are accepted but ignored for some time
     }
 
     @PostMapping
-    public EmployeeDto addEmployee(@RequestBody EmployeeDto InputEmployee)
+    public EmployeeEntity addEmployee(@RequestBody EmployeeEntity inputEmployee)
     {
-        InputEmployee.setId(100L);
-        return  InputEmployee;
+//        InputEmployee.setId(100L);
+        return  employeeRepository.save(inputEmployee);
     }
 
     @PutMapping
