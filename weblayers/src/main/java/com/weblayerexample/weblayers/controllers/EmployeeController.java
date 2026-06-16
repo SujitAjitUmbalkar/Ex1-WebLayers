@@ -1,13 +1,10 @@
 package com.weblayerexample.weblayers.controllers;
 
 import com.weblayerexample.weblayers.dto.EmployeeDto;
-import com.weblayerexample.weblayers.entities.EmployeeEntity;
-import com.weblayerexample.weblayers.repositories.EmployeeRepository;
+import com.weblayerexample.weblayers.services.EmployeeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.resource.NoResourceFoundException;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -15,38 +12,37 @@ import java.util.List;
 @RequiredArgsConstructor
 class EmployeeController
 {
-    private final EmployeeRepository employeeRepository;
+    private final EmployeeService employeeService;
 
     @GetMapping("/{employeeId}")
-    public EmployeeEntity getEmployeeById(@PathVariable(name = "employeeId") Long id)
+    public EmployeeDto getEmployeeById(@PathVariable(name = "employeeId") Long id)
     {
-         return  employeeRepository.findById(id).orElse(null);
+        return employeeService.getEmployeeById(id);
     }
 
     @GetMapping
-    public List<EmployeeEntity> getAllEmployees(@RequestParam(required = false, name = "InputAge") Integer age,
+    public List<EmployeeDto> getAllEmployees(@RequestParam(required = false, name = "InputAge") Integer age,
                                                 @RequestParam(required = false) String sortBy)
     {
-        return employeeRepository.findAll();        // parameters are accepted but ignored for some time
+        return employeeService.getAllEmployees(age , sortBy);
     }
 
     @PostMapping
-    public EmployeeEntity addEmployee(@RequestBody EmployeeEntity inputEmployee)
+    public EmployeeDto createNewEmployee(@RequestBody EmployeeDto inputEmployee)
     {
-//        InputEmployee.setId(100L);
-        return  employeeRepository.save(inputEmployee);
+        return employeeService.createNewEmployee(inputEmployee);
     }
 
     @PutMapping
-    public String updateEmployeeById()
+    public EmployeeDto updateEmployeeById(@RequestBody EmployeeDto inputEmployee, @PathVariable Long id)
     {
-        return "Return from PutMapping ";
+        return employeeService.updateEmployee(inputEmployee , id);
     }
 
     @DeleteMapping
-    public String deleteEmployeeById()
+    public void deleteEmployeeById(@PathVariable Long id)
     {
-        return "Return from DeleteMapping";
+        employeeService.deleteEmployeeById(id);
     }
 
     @PatchMapping
