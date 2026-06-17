@@ -1,5 +1,6 @@
 package com.weblayerexample.weblayers.controllers;
 
+import com.weblayerexample.weblayers.Exceptions.NoResourceFoundExceptions;
 import com.weblayerexample.weblayers.dto.EmployeeDto;
 import com.weblayerexample.weblayers.services.EmployeeService;
 import jakarta.validation.Valid;
@@ -10,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/employees")
@@ -24,7 +24,7 @@ public class EmployeeController
     {
         return employeeService.getEmployeeById(employeeId)
                 .map(ResponseEntity::ok)
-                .orElseThrow(()-> new NoSuchElementException("employee not found "));
+                .orElseThrow(() -> new NoResourceFoundExceptions("Employee not found with id "+ employeeId));
     }
 
     @GetMapping
