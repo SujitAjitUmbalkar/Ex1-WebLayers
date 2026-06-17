@@ -27,15 +27,6 @@ public class EmployeeController
                 .orElseThrow(()-> new NoSuchElementException("employee not found "));
     }
 
-    @ExceptionHandler(NoSuchElementException.class)
-    public ResponseEntity<String> HandleException(NoSuchElementException e)
-    {
-        return new  ResponseEntity<>("Employee not found", HttpStatus.NOT_FOUND);
-    }
-//Exception handling is not mainly for preventing crashes.
-//It is for:
-//Converting Java exceptions into proper HTTP responses.
-
     @GetMapping
     public ResponseEntity<List<EmployeeDto>> getAllEmployees(
             @RequestParam(required = false, name = "InputAge") Integer age,
