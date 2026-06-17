@@ -3,6 +3,8 @@ package com.weblayerexample.weblayers.controllers;
 import com.weblayerexample.weblayers.dto.EmployeeDto;
 import com.weblayerexample.weblayers.services.EmployeeService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -11,48 +13,68 @@ import java.util.Map;
 @RestController
 @RequestMapping("/employees")
 @RequiredArgsConstructor
-class EmployeeController
+public class EmployeeController
 {
     private final EmployeeService employeeService;
 
     @GetMapping("/{employeeId}")
-    public EmployeeDto getEmployeeById(@PathVariable(name = "employeeId") Long id)
+    public ResponseEntity<EmployeeDto> getEmployeeById(
+            @PathVariable Long employeeId)
     {
-        return employeeService.getEmployeeById(id);
+        return employeeService.getEmployeeById(employeeId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping
-    public List<EmployeeDto> getAllEmployees(@RequestParam(required = false, name = "InputAge") Integer age,
-                                                @RequestParam(required = false) String sortBy)
+    public ResponseEntity<List<EmployeeDto>> getAllEmployees(
+            @RequestParam(required = false, name = "InputAge") Integer age,
+            @RequestParam(required = false) String sortBy)
     {
-        return employeeService.getAllEmployees(age , sortBy);
+        return ResponseEntity.ok(
+                employeeService.getAllEmployees(age, sortBy)
+        );
     }
 
     @PostMapping
-    public EmployeeDto createNewEmployee(@RequestBody EmployeeDto inputEmployee)
+    public ResponseEntity<EmployeeDto> createNewEmployee(
+            @RequestBody EmployeeDto inputEmployee)
     {
-        return employeeService.createNewEmployee(inputEmployee);
+        EmployeeDto savedEmployee =
+                employeeService.createNewEmployee(inputEmployee);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(savedEmployee);
     }
 
     @PutMapping("/{id}")
-    public EmployeeDto updateEmployeeById(@RequestBody EmployeeDto inputEmployee, @PathVariable Long id)
+    public ResponseEntity<EmployeeDto> updateEmployeeById(
+            @RequestBody EmployeeDto inputEmployee,
+            @PathVariable Long id)
     {
-        return employeeService.updateEmployee(inputEmployee , id);
-    }
-
-    @DeleteMapping("/{id}")
-    public Boolean deleteEmployeeById(@PathVariable Long id)
-    {
-      Boolean deleted =   employeeService.deleteEmployeeById(id);
-        return deleted;
+        return ResponseEntity.ok(
+                employeeService.updateEmployee(inputEmployee, id)
+        );
     }
 
     @PatchMapping("/{id}")
-    public EmployeeDto patchEmployeeById(
+    public ResponseEntity<EmployeeDto> patchEmployeeById(
             @PathVariable Long id,
             @RequestBody Map<String, Object> update)
     {
-        return employeeService.patchEmployeeById(id, update);
+        return ResponseEntity.ok(
+                employeeService.patchEmployeeById(id, update)
+        );
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteEmployeeById
+            (
+                @PathVariable Long id
+            )
+    {
+        employeeService.deleteEmployeeById(id);
+
+        return ResponseEntity.noContent().build(); // 204
+    }
 }

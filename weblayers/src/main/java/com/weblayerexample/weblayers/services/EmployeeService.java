@@ -11,101 +11,114 @@ import org.springframework.util.ReflectionUtils;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class EmployeeService 
+public class EmployeeService
 {
     private final EmployeeRepository employeeRepository;
     private final ModelMapper modelMapper;
 
-    public EmployeeDto getEmployeeById(Long id)
+    // GET BY ID
+    public Optional<EmployeeDto> getEmployeeById(Long id)
     {
-        EmployeeEntity employeeEntity =  employeeRepository.findById(id).orElse(null);
-        return modelMapper.map(employeeEntity, EmployeeDto.class);
+        return employeeRepository.findById(id)
+                .map(employee ->
+                        modelMapper.map(employee, EmployeeDto.class));
     }
 
+    // GET ALL
     public List<EmployeeDto> getAllEmployees(Integer age, String sortBy)
     {
-        List<EmployeeEntity> employeeEntities =  employeeRepository.findAll();
-        return
-                employeeEntities
-                        .stream()
-                        .map(employeeEntity -> modelMapper.map(employeeEntity , EmployeeDto.class))
-                        .collect(Collectors.toList());
+        List<EmployeeEntity> employeeEntities =
+                employeeRepository.findAll();
+
+        return employeeEntities.stream()
+                .map(employee ->
+                        modelMapper.map(employee, EmployeeDto.class))
+                .collect(Collectors.toList());
     }
 
+    // CREATE
     public EmployeeDto createNewEmployee(EmployeeDto inputEmployee)
     {
-        EmployeeEntity employeeEntity = modelMapper.map(inputEmployee, EmployeeEntity.class);   // accept and convert to Entity
-        EmployeeEntity savedEmployeeEntity = employeeRepository.save(employeeEntity);    // save entity
-        return modelMapper.map(savedEmployeeEntity, EmployeeDto.class);     // return DTO
+        EmployeeEntity employeeEntity =
+                modelMapper.map(inputEmployee, EmployeeEntity.class);
+
+        EmployeeEntity savedEmployee =
+                employeeRepository.save(employeeEntity);
+
+        return modelMapper.map(savedEmployee, EmployeeDto.class);
     }
 
-    public EmployeeDto updateEmployee(EmployeeDto inputEmployee, Long id)
+    // PUT (FULL UPDATE)
+    public EmployeeDto updateEmployee(EmployeeDto inputEmployee,
+                                      Long id)
     {
-        EmployeeEntity existingemployeeEntity = employeeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Employee not found"));
+        EmployeeEntity existingEmployee =
+                employeeRepository.findById(id)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Employee not found with id " + id));
 
-        // IMPORTANT: preserve ID
-        inputEmployee.setId(existingemployeeEntity.getId());
+        // Preserve ID
+        inputEmployee.setId(existingEmployee.getId());
 
-        // map DTO fields into existing entity
-        // don't use .class because it will create new object
-        modelMapper.map(inputEmployee, existingemployeeEntity);
+        // Copy DTO fields into existing entity
+        modelMapper.map(inputEmployee, existingEmployee);
 
-        EmployeeEntity updatedEntity = employeeRepository.save(existingemployeeEntity);
+        EmployeeEntity updatedEmployee =
+                employeeRepository.save(existingEmployee);
 
-        return modelMapper.map(updatedEntity, EmployeeDto.class);
+        return modelMapper.map(updatedEmployee, EmployeeDto.class);
     }
 
-    public Boolean deleteEmployeeById(Long id)
+    // DELETE
+    public void deleteEmployeeById(Long id)
     {
-        boolean exists = employeeRepository.existsById(id);
+        EmployeeEntity employee =
+                employeeRepository.findById(id)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Employee not found with id " + id));
 
-        if(exists)
-        {
-            employeeRepository.deleteById(id);
-            return true;
-        }
-
-        return false;
+        employeeRepository.delete(employee);
     }
 
+    // PATCH (PARTIAL UPDATE)
     public EmployeeDto patchEmployeeById(Long employeeId,
-                                         Map<String, Object> update)
+                                         Map<String, Object> updates)
     {
-        EmployeeEntity employeeExistingEntity =
+        EmployeeEntity employee =
                 employeeRepository.findById(employeeId)
                         .orElseThrow(() ->
                                 new RuntimeException(
                                         "Employee not found with id " + employeeId));
 
-        update.forEach((field, value) -> {
+        updates.forEach((fieldName, value) ->
+        {
+            Field field =
+                    ReflectionUtils.findField(
+                            EmployeeEntity.class,
+                            fieldName
+                    );
 
-            System.out.println("Field = " + field);
-            System.out.println("Value = " + value);
-
-            Field fieldToBeUpdated =
-                    ReflectionUtils.findField(EmployeeEntity.class, field);
-
-            System.out.println("Found field = " + fieldToBeUpdated);
-
-            if(fieldToBeUpdated != null) {
-                fieldToBeUpdated.setAccessible(true);
+            if(field != null)
+            {
+                field.setAccessible(true);
                 ReflectionUtils.setField(
-                        fieldToBeUpdated,
-                        employeeExistingEntity,
+                        field,
+                        employee,
                         value
                 );
             }
         });
 
         EmployeeEntity savedEmployee =
-                employeeRepository.save(employeeExistingEntity);
+                employeeRepository.save(employee);
 
         return modelMapper.map(savedEmployee, EmployeeDto.class);
     }
 }
-
