@@ -30,4 +30,20 @@ public class GlobalExceptionHandeller
 
         return new ResponseEntity<>(apiError, HttpStatus.NOT_FOUND);
     }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiError> HandleInternalServerError(Exception eobj)
+    {
+        ApiError apiError = ApiError.builder()
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .message(eobj.getMessage())
+                .build();
+
+        return new ResponseEntity<>(apiError, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+//    ring always tries to find the most specific @ExceptionHandler first.
+//    If no specific handler exists,
+//    it falls back to a more general handler such as @ExceptionHandler(Exception.class).
+//    This acts as a catch-all handler for unexpected errors.
 }
