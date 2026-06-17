@@ -2,6 +2,7 @@ package com.weblayerexample.weblayers.controllers;
 
 import com.weblayerexample.weblayers.dto.EmployeeDto;
 import com.weblayerexample.weblayers.services.EmployeeService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,7 +39,7 @@ public class EmployeeController
 
     @PostMapping
     public ResponseEntity<EmployeeDto> createNewEmployee(
-            @RequestBody EmployeeDto inputEmployee)
+           @Valid @RequestBody EmployeeDto inputEmployee)
     {
         EmployeeDto savedEmployee =
                 employeeService.createNewEmployee(inputEmployee);
@@ -49,7 +50,7 @@ public class EmployeeController
 
     @PutMapping("/{id}")
     public ResponseEntity<EmployeeDto> updateEmployeeById(
-            @RequestBody EmployeeDto inputEmployee,
+            @Valid @RequestBody EmployeeDto inputEmployee,
             @PathVariable Long id)
     {
         return ResponseEntity.ok(
@@ -60,7 +61,7 @@ public class EmployeeController
     @PatchMapping("/{id}")
     public ResponseEntity<EmployeeDto> patchEmployeeById(
             @PathVariable Long id,
-            @RequestBody Map<String, Object> update)
+            @Valid @RequestBody Map<String, Object> update)
     {
         return ResponseEntity.ok(
                 employeeService.patchEmployeeById(id, update)
