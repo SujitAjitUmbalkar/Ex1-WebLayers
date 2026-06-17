@@ -16,15 +16,15 @@ import java.util.stream.Collectors;
 public class GlobalExceptionHandeller
 {
     @ExceptionHandler(NoSuchElementException.class)         // globally
-    public ResponseEntity<ApiError> HandleResourceNotFound(NoSuchElementException e)
+    public ResponseEntity<ApiResponse<?>> HandleResourceNotFound(NoSuchElementException e)
     {
         ApiError apiError = ApiError.builder().status(HttpStatus.NOT_FOUND).message("Resource Not Found").build();
 
-        return new ResponseEntity<>(apiError, HttpStatus.NOT_FOUND);
+        return buildApiResponse(apiError);
     }
 
     @ExceptionHandler(NoResourceFoundExceptions.class)
-    public ResponseEntity<ApiError> handleResourceNotFound(
+    public ResponseEntity<ApiResponse<?>> handleResourceNotFound(
             NoResourceFoundExceptions ex)
     {
         ApiError apiError = ApiError.builder()
@@ -32,22 +32,22 @@ public class GlobalExceptionHandeller
                 .message(ex.getMessage())
                 .build();
 
-        return new ResponseEntity<>(apiError, HttpStatus.NOT_FOUND);
+        return buildApiResponse(apiError);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiError> HandleInternalServerError(Exception eobj)
+    public ResponseEntity<ApiResponse<?>> HandleInternalServerError(Exception eobj)
     {
         ApiError apiError = ApiError.builder()
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .message(eobj.getMessage())
                 .build();
 
-        return new ResponseEntity<>(apiError, HttpStatus.INTERNAL_SERVER_ERROR);
+        return buildApiResponse(apiError);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiError> HandleInputValidation(MethodArgumentNotValidException eobj)
+    public ResponseEntity<ApiResponse<?>>  HandleInputValidation(MethodArgumentNotValidException eobj)
     {
         List<String> errors = eobj
                 .getBindingResult()
@@ -62,7 +62,12 @@ public class GlobalExceptionHandeller
                 .message("Input Validation Failed")
                 .subErrors(errors)
                 .build();
-        return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
+        return  buildApiResponse(apiError);
 
+    }
+
+    private ResponseEntity<ApiResponse<?>> buildApiResponse(ApiError apiError)
+    {
+        return new ResponseEntity<>(new ApiResponse<>(apiError), apiError.getStatus()) ;
     }
 }
