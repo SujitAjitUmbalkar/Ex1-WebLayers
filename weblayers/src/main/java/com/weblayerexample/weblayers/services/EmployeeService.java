@@ -1,5 +1,6 @@
 package com.weblayerexample.weblayers.services;
 
+import com.weblayerexample.weblayers.Exceptions.NoResourceFoundExceptions;
 import com.weblayerexample.weblayers.dto.EmployeeDto;
 import com.weblayerexample.weblayers.entities.EmployeeEntity;
 import com.weblayerexample.weblayers.repositories.EmployeeRepository;
@@ -20,6 +21,12 @@ public class EmployeeService
 {
     private final EmployeeRepository employeeRepository;
     private final ModelMapper modelMapper;
+
+    public void checkIfEmployeeExists(Long id)
+    {
+        boolean  exists = employeeRepository.existsById(id);
+        if(!exists) {    throw new NoResourceFoundExceptions("Employee not found with id "+ id);  }
+    }
 
     // GET BY ID
     public Optional<EmployeeDto> getEmployeeById(Long id)
@@ -54,23 +61,24 @@ public class EmployeeService
     }
 
     // PUT (FULL UPDATE)
-    public EmployeeDto updateEmployee(EmployeeDto inputEmployee,
-                                      Long id)
+    public EmployeeDto updateEmployee(EmployeeDto inputEmployee,Long id)
     {
-        EmployeeEntity existingEmployee =
-                employeeRepository.findById(id)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Employee not found with id " + id));
+        checkIfEmployeeExists(id);
 
-        // Preserve ID
+        EmployeeEntity existingEmployee = employeeRepository.findById(id).get();
+
+//        WHY WE  USED GET HERE
+//`findById()` returns an `Optional<EmployeeEntity>`. In **GET**,
+// we return the `Optional` safely using `map()` because the employee may or may not exist.
+//In **PUT/PATCH**, we first verify that the employee exists (`checkIfEmployeeExists(id)`),
+// so we are sure the `Optional` contains a value and can
+// safely extract the actual `EmployeeEntity` using `get()` (though `orElseThrow()` is preferred in production code).
+
         inputEmployee.setId(existingEmployee.getId());
 
-        // Copy DTO fields into existing entity
         modelMapper.map(inputEmployee, existingEmployee);
 
-        EmployeeEntity updatedEmployee =
-                employeeRepository.save(existingEmployee);
+        EmployeeEntity updatedEmployee = employeeRepository.save(existingEmployee);
 
         return modelMapper.map(updatedEmployee, EmployeeDto.class);
     }
@@ -78,24 +86,16 @@ public class EmployeeService
     // DELETE
     public void deleteEmployeeById(Long id)
     {
-        EmployeeEntity employee =
-                employeeRepository.findById(id)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Employee not found with id " + id));
-
-        employeeRepository.delete(employee);
+            checkIfEmployeeExists(id);
+            employeeRepository.deleteById(id);
     }
 
     // PATCH (PARTIAL UPDATE)
-    public EmployeeDto patchEmployeeById(Long employeeId,
-                                         Map<String, Object> updates)
+    public EmployeeDto patchEmployeeById(Long employeeId,Map<String, Object> updates)
     {
-        EmployeeEntity employee =
-                employeeRepository.findById(employeeId)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Employee not found with id " + employeeId));
+        checkIfEmployeeExists(employeeId);
+
+        EmployeeEntity employee = employeeRepository.findById(employeeId).get();
 
         updates.forEach((fieldName, value) ->
         {
